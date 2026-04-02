@@ -1,0 +1,176 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { motion } from "framer-motion";
+
+const ACHIEVEMENTS = [
+  { name: "Duck Pond", goal: 100 },
+  { name: "Duck Town", goal: 1000 },
+  { name: "Duck City", goal: 10000 },
+  { name: "Quack Army", goal: 100000 },
+  { name: "Duck Nation", goal: 1000000 },
+  { name: "Super Duck Mountain", goal: 10000000 },
+  { name: "Ultimate Duck Collection", goal: 100000000 },
+  { name: "Duck World", goal: 1000000000 },
+  { name: "Duck Galaxy", goal: 100000000000 },
+  { name: "Impossible Duck Universe", goal: 1000000000000 },
+];
+
+export default function DuckClicker() {
+  const [ducks, setDucks] = useState(0);
+  const [totalDucks, setTotalDucks] = useState(0);
+  const [perClick, setPerClick] = useState(1);
+  const [autoDucks, setAutoDucks] = useState(0);
+
+  const [clickLevel, setClickLevel] = useState(1);
+  const [autoLevel, setAutoLevel] = useState(0);
+
+  const [tab, setTab] = useState("game");
+
+  const clickCost = Math.floor(10 * Math.pow(1.5, clickLevel - 1));
+  const autoCost = Math.floor(25 * Math.pow(1.6, autoLevel));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDucks((d) => d + autoDucks);
+      setTotalDucks((t) => t + autoDucks);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [autoDucks]);
+
+  const handleClick = () => {
+    setDucks((d) => d + perClick);
+    setTotalDucks((t) => t + perClick);
+  };
+
+  const upgradeClick = () => {
+    if (ducks >= clickCost) {
+      setDucks((d) => d - clickCost);
+      setPerClick((p) => p + 1);
+      setClickLevel((lvl) => lvl + 1);
+    }
+  };
+
+  const buyAutoDuck = () => {
+    if (ducks >= autoCost) {
+      setDucks((d) => d - autoCost);
+      setAutoDucks((a) => a + 1);
+      setAutoLevel((lvl) => lvl + 1);
+    }
+  };
+
+  const unlocked = ACHIEVEMENTS.filter((a) => totalDucks >= a.goal);
+
+  return (
+    <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-sky-300 via-blue-300 to-indigo-400 overflow-hidden">
+      {/* Animated floating ducks */}
+      <div className="absolute inset-0 pointer-events-none">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute text-4xl opacity-20"
+            initial={{ y: Math.random() * 800, x: Math.random() * 800 }}
+            animate={{ y: [null, -100] }}
+            transition={{ duration: 20 + Math.random() * 10, repeat: Infinity }}
+          >
+            🦆
+          </motion.div>
+        ))}
+      </div>
+
+      <Card className="w-full max-w-md backdrop-blur-xl bg-white/70 shadow-2xl rounded-3xl border border-white/40 relative z-10">
+        <CardContent className="p-6 text-center space-y-5">
+          <h1 className="text-4xl font-extrabold tracking-tight">🦆 Untitled Duck Game</h1>
+
+          {/* Tabs */}
+          <div className="flex gap-2 justify-center">
+            <Button variant={tab === "game" ? "default" : "secondary"} onClick={() => setTab("game")} className="rounded-full px-4">Game</Button>
+            <Button variant={tab === "stats" ? "default" : "secondary"} onClick={() => setTab("stats")} className="rounded-full px-4">Stats</Button>
+          </div>
+
+          {tab === "game" && (
+            <>
+              {/* Duck Counter */}
+              <div className="bg-white/80 rounded-2xl p-4 shadow-inner">
+                <p className="text-sm uppercase tracking-wide text-gray-600">Ducks</p>
+                <p className="text-4xl font-extrabold">{ducks}</p>
+              </div>
+
+              {/* Click Duck */}
+              <motion.div
+                whileTap={{ scale: 0.8, rotate: -5 }}
+                whileHover={{ scale: 1.1 }}
+                className="text-8xl cursor-pointer select-none drop-shadow-lg"
+                onClick={handleClick}
+              >
+                🦆
+              </motion.div>
+
+              {/* Upgrades */}
+              <div className="grid gap-4">
+                <Button
+                  onClick={upgradeClick}
+                  disabled={ducks < clickCost}
+                  className="text-lg py-6 rounded-2xl shadow-lg"
+                >
+                  ✨ Upgrade Click (Lv {clickLevel})
+                  <br />Cost: {clickCost}
+                </Button>
+
+                <Button
+                  onClick={buyAutoDuck}
+                  disabled={ducks < autoCost}
+                  className="text-lg py-6 rounded-2xl shadow-lg"
+                >
+                  ⚙️ Auto Duck (Lv {autoLevel})
+                  <br />Cost: {autoCost}
+                </Button>
+              </div>
+
+              {/* Stats */}
+              <div className="bg-white/70 rounded-xl p-3 text-sm grid grid-cols-2 gap-2">
+                <p>Per Click: {perClick}</p>
+                <p>Auto/sec: {autoDucks}</p>
+              </div>
+            </>
+          )}
+
+          {tab === "stats" && (
+            <>
+              <div className="bg-white/80 rounded-xl p-4">
+                <p className="text-sm uppercase text-gray-600">Total Ducks</p>
+                <p className="text-3xl font-bold">{totalDucks}</p>
+              </div>
+
+              <div className="text-left bg-white/70 rounded-xl p-3 max-h-64 overflow-y-auto space-y-1">
+                <p className="font-bold mb-2">🏆 Achievements</p>
+                {ACHIEVEMENTS.map((a, i) => {
+                  const isUnlocked = totalDucks >= a.goal;
+                  const progress = Math.min((totalDucks / a.goal) * 100, 100);
+                  return (
+                    <div key={i} className="text-xs">
+                      <div className="flex justify-between">
+                        <span className={isUnlocked ? "text-green-700 font-semibold" : "text-gray-500"}>{a.name}</span>
+                        <span>{a.goal.toLocaleString()}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                        <div
+                          className={`h-2 rounded-full ${isUnlocked ? "bg-green-500" : "bg-blue-400"}`}
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <p className="text-sm text-gray-700">
+                Unlocked: {unlocked.length} / {ACHIEVEMENTS.length}
+              </p>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
